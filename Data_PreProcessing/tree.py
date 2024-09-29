@@ -17,4 +17,4 @@ def list_folders_and_file_count(root, max_depth):
             del dirnames[:]  # Prevent os.walk from going deeper
 
 # Example usage
-list_folders_and_file_count('Dataset', 4)  # Lists folders up to depth 4 and shows number of files in leaf directories
+list_folders_and_file_count('../Dataset', 4)  # Lists folders up to depth 4 and shows number of files in leaf directories

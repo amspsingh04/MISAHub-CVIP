@@ -26,5 +26,5 @@ def move_images_to_class_folders(root_dir):
                         os.rmdir(source_path)
 
 # Specify the root directory where the 'training' and 'validation' folders exist
-root_dir = 'Dataset'
+root_dir = '../Dataset'
 move_images_to_class_folders(root_dir)

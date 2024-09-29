@@ -3,16 +3,15 @@ import os
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor
 
-input_directory='../Dataset/training/Bleeding/d369e4f163df4aba_2101.jpg'
-output_directory='../Dataset_new/training/Bleeding'
-# Define the directory path
-input_1= '../Dataset/training'
-input_2='../Dataset/validation'
-output_1 = '../Dataset_new/training'
-output_2 = '../Dataset_new/validation'
 
-if not (os.path.exists(output_1) and os.path.exists(output_2)):
-    os.makedirs(output_directory)
+# Define the directory path
+input_dirs = ['../Dataset/training', '../Dataset/validation']
+output_dirs = ['../Dataset_new/training', '../Dataset_new/validation']
+
+
+for output_dir in output_dirs:
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
 #def sepia(image):
 #   sepia_filter = np.array([[0.272, 0.534, 0.131],
@@ -42,22 +41,35 @@ def adjust_contrast(image, contrast=1.5):
     return adjusted_image
 #check contrast toggling here: ''..\examples\contrast.jpg'' and decide on parameters
 
+def gaussian_blur_correction(image):
+    kernel_size = (5, 5)  
+    sigma = 1.0  
+    kernel = cv2.getGaussianKernel(ksize=5, sigma=sigma)
+    kernel = np.outer(kernel, kernel.T)
+    corrected_image = cv2.filter2D(image, -1, kernel)
+    return corrected_image
+#check GBC toggling here: ''..\examples\gaussian_blur.jpg'' and decide on parameters
+
 def apply_filter(image):
     #image = sepia(image)
     image = sharpenn(image)
-    image = adjust_brightness(image, brightness=50)    
+    #image = adjust_brightness(image, brightness=50)    
     image = adjust_contrast(image, contrast=1.3)
+    image = gaussian_blur_correction(image)
     return image
 
-def process_image(filepath):
+def process_image(filepath, output_directory):
     image = cv2.imread(filepath)
     if image is None:
         print(f"Error loading image {filepath}, skipping...")
         return
+    
     filtered_image = apply_filter(image)
-    relative_path = os.path.relpath(filepath, input_directory)
+    
+    relative_path = os.path.relpath(filepath, os.path.dirname(output_directory))
     output_path = os.path.join(output_directory, relative_path)
     output_subfolder = os.path.dirname(output_path)
+    
     if not os.path.exists(output_subfolder):
         os.makedirs(output_subfolder)
 
@@ -68,17 +80,17 @@ def process_image(filepath):
     else:
         print(f"Failed to save: {output_path}")
 
-def process_images_in_parallel():
+def process_images_in_parallel(input_directory, output_directory):
     image_files = []
     for root, _, files in os.walk(input_directory):
         for file in files:
             if file.endswith((".jpg", ".jpeg", ".png")):
-                image_files.append((os.path.join(root, file), root))  # Append tuple of (file path, root)
-
-    image_paths = [item[0] for item in image_files]
+                image_files.append(os.path.join(root, file))  # Append only the file path
     with ProcessPoolExecutor() as executor:
-        executor.map(process_image, image_paths)
-    print(image_paths)
+        executor.map(lambda x: process_image(x[0], x[1]), zip(image_files, [output_directory]*len(image_files)))
+
 if __name__ == "__main__":
-    process_images_in_parallel()
+    for input_dir, output_dir in zip(input_dirs, output_dirs):
+        print(input_dir, output_dir)
+        process_images_in_parallel(input_dir, output_dir)
     print("Processing complete!")
