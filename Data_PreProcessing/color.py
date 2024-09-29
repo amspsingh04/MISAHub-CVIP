@@ -55,8 +55,10 @@ def apply_filter(image):
     image = sharpenn(image)
     #image = adjust_brightness(image, brightness=50)    
     image = adjust_contrast(image, contrast=1.4)
+    #image = gaussian_blur_correction(image)
     #image = cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
     return image
+
 
 def process_image(filepath, output_directory):
     image = cv2.imread(filepath)
