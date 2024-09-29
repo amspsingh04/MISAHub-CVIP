@@ -60,6 +60,7 @@ def apply_filter(image):
 
 def process_image(filepath, output_directory):
     image = cv2.imread(filepath)
+    print(filepath)
     if image is None:
         print(f"Error loading image {filepath}, skipping...")
         return
@@ -87,7 +88,7 @@ def process_images_in_parallel(input_directory, output_directory):
             if file.endswith((".jpg", ".jpeg", ".png")):
                 image_files.append(os.path.join(root, file))  # Append only the file path
     with ProcessPoolExecutor() as executor:
-        executor.map(lambda x: process_image(x[0], x[1]), zip(image_files, [output_directory]*len(image_files)))
+        executor.map(process_image, image_files, [output_directory]*len(image_files))
 
 if __name__ == "__main__":
     for input_dir, output_dir in zip(input_dirs, output_dirs):
