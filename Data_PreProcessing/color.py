@@ -2,7 +2,7 @@ import cv2
 import os
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor
-
+import multiprocessing  
 
 # Define the directory path
 input_dirs = ['../Dataset/training', '../Dataset/validation']
@@ -43,8 +43,8 @@ def adjust_contrast(image, contrast=1.5):
 
 def gaussian_blur_correction(image):
     kernel_size = (5, 5)  
-    sigma = 1.0  
-    kernel = cv2.getGaussianKernel(ksize=5, sigma=sigma)
+    sigma = 10e-5
+    kernel = cv2.getGaussianKernel(ksize=1, sigma=sigma)
     kernel = np.outer(kernel, kernel.T)
     corrected_image = cv2.filter2D(image, -1, kernel)
     return corrected_image
@@ -54,7 +54,7 @@ def apply_filter(image):
     #image = sepia(image)
     image = sharpenn(image)
     #image = adjust_brightness(image, brightness=50)    
-    image = adjust_contrast(image, contrast=1.3)
+    image = adjust_contrast(image, contrast=1.4)
     image = gaussian_blur_correction(image)
     return image
 
@@ -86,9 +86,10 @@ def process_images_in_parallel(input_directory, output_directory):
     for root, _, files in os.walk(input_directory):
         for file in files:
             if file.endswith((".jpg", ".jpeg", ".png")):
-                image_files.append(os.path.join(root, file))  # Append only the file path
-    with ProcessPoolExecutor() as executor:
-        executor.map(process_image, image_files, [output_directory]*len(image_files))
+                image_files.append(os.path.join(root, file))  
+    num_cores = multiprocessing.cpu_count()
+    with ProcessPoolExecutor(max_workers=num_cores) as executor:
+        executor.map(process_image, image_files, [output_directory] * len(image_files))
 
 if __name__ == "__main__":
     for input_dir, output_dir in zip(input_dirs, output_dirs):
