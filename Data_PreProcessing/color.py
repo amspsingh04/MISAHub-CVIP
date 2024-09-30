@@ -6,8 +6,8 @@ import multiprocessing
 from scipy.linalg import fractional_matrix_power
 
 # Define the directory path
-input_dirs = ['../Dataset/training', '../Dataset/validation']
-output_dirs = ['../Dataset_new/training', '../Dataset_new/validation']
+input_dirs = ['../Dataset_new/Dataset/training', '../Dataset_new/Dataset/validation']
+output_dirs = ['../Dataset_try/training', '../Dataset_try/validation']
 
 
 for output_dir in output_dirs:
@@ -121,9 +121,12 @@ def apply_filter(image):
     #image = adjust_brightness(image, brightness=50)    
     image = adjust_contrast(image, contrast=1.4)
     #image = gaussian_blur_correction(image)
-    #image = cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
+    image = cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
     return image
-
+'''
+We are putting all our images through an IAGC layer and then sharpenning and increasing contrast
+Then we put it through a Fast Non Local Means Denoising layer and then we return the image
+'''
 
 def process_image(filepath, output_directory):
     image = cv2.imread(filepath)
@@ -154,7 +157,7 @@ def process_images_in_parallel(input_directory, output_directory):
         for file in files:
             if file.endswith((".jpg", ".jpeg", ".png")):
                 image_files.append(os.path.join(root, file))  
-    num_cores = 4
+    num_cores = multiprocessing.cpu_count()
     with ProcessPoolExecutor(max_workers=num_cores) as executor:
         executor.map(process_image, image_files, [output_directory] * len(image_files))
 
